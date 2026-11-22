@@ -1,0 +1,164 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.*, com.sujal.model.Provider" %>
+<%
+    List<Provider> providers = (List<Provider>) request.getAttribute("providerList");
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approved Service Partners &mdash; QuickFixHub Admin</title>
+    <%@ include file="common/styles.jsp" %>
+</head>
+<body>
+    <header class="qh-navbar" style="border-bottom: 2px solid var(--border);">
+        <div class="qh-navbar-inner">
+            <a href="${pageContext.request.contextPath}/admindashboard" class="qh-brand">
+                <div class="qh-brand-mark" style="background: var(--charcoal);"><i class="fas fa-shield-halved"></i></div>
+                <div>
+                    <span class="qh-brand-title">QuickFixHub</span>
+                    <span class="qh-brand-subtitle">Platform Administration</span>
+                </div>
+            </a>
+            <div class="qh-nav-actions">
+                <a href="${pageContext.request.contextPath}/admindashboard" class="qh-btn qh-btn-secondary qh-btn-sm">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="qh-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="qh-hero-tag" style="color: var(--sage);">Verified Partners</span>
+                <h1 class="editorial-heading" style="font-size: 2.1rem;">Active & Approved Professionals</h1>
+                <p class="text-muted" style="font-size: 0.95rem; margin-top: 0.25rem;">
+                    Verified craftspeople authorized to accept customer bookings across municipal territories
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.65rem;">
+                <a href="${pageContext.request.contextPath}/viewAllProviders" class="qh-btn qh-btn-secondary qh-btn-sm">
+                    <i class="fas fa-clock-rotate-left"></i> View Pending
+                </a>
+                <a href="${pageContext.request.contextPath}/disapprovedProvider" class="qh-btn qh-btn-secondary qh-btn-sm">
+                    <i class="fas fa-ban"></i> View Disapproved
+                </a>
+            </div>
+        </div>
+
+        <div class="qh-card">
+            <div class="qh-card-header">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <i class="fas fa-certificate" style="color: var(--sage); font-size: 1.15rem;"></i>
+                    <h3 class="editorial-heading" style="font-size: 1.25rem;">Verified Partner Directory</h3>
+                </div>
+            </div>
+
+            <div class="qh-table-container">
+                <table class="qh-table" id="approvedTable">
+                    <thead>
+                        <tr>
+                            <th>Partner Name</th>
+                            <th>Contact</th>
+                            <th>Email</th>
+                            <th>City</th>
+                            <th>Category</th>
+                            <th>Specialization</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            boolean hasApproved = false;
+                            if (providers != null && !providers.isEmpty()) {
+                                for (Provider p : providers) {
+                                    if ("approved".equalsIgnoreCase(p.getStatus())) {
+                                        hasApproved = true;
+                        %>
+                        <tr id="row_<%= p.getContact() %>">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                    <div style="width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--sage-light); color: var(--sage-dark); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">
+                                        <%= p.getName() != null && !p.getName().isEmpty() ? p.getName().substring(0, 1).toUpperCase() : "P" %>
+                                    </div>
+                                    <span style="font-weight: 700; color: var(--charcoal);"><%= p.getName() %></span>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="tel:<%= p.getContact() %>" style="color: var(--terracotta); text-decoration: none; font-weight: 600; font-size: 0.88rem;">
+                                    <i class="fas fa-phone" style="font-size: 0.78rem;"></i> <%= p.getContact() %>
+                                </a>
+                            </td>
+                            <td><span style="font-size: 0.85rem; color: var(--muted);"><%= p.getEmail() %></span></td>
+                            <td>
+                                <span style="font-size: 0.88rem;"><i class="fas fa-city" style="color: var(--muted); font-size: 0.78rem;"></i> <%= p.getCity() %></span>
+                            </td>
+                            <td><strong><%= p.getCategory() %></strong></td>
+                            <td><span class="text-muted" style="font-size: 0.85rem;"><%= p.getServiceType() != null ? p.getServiceType() : "-" %></span></td>
+                            <td>
+                                <span class="qh-badge qh-badge-sage">
+                                    <i class="fas fa-check-circle"></i> Approved
+                                </span>
+                            </td>
+                            <td>
+                                <form onsubmit="handleStatusUpdate(event, this, 'disapproved');" style="display:inline;">
+                                    <input type="hidden" name="contact" value="<%= p.getContact() %>">
+                                    <button type="submit" class="qh-btn qh-btn-brick qh-btn-sm">
+                                        <i class="fas fa-ban"></i> Disapprove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <%
+                                    }
+                                }
+                            }
+                            if (!hasApproved) {
+                        %>
+                        <tr>
+                            <td colspan="8">
+                                <div class="qh-empty-state">
+                                    <i class="fas fa-user-xmark qh-empty-icon"></i>
+                                    <h3 class="qh-empty-title">No Approved Partners</h3>
+                                    <p class="qh-empty-desc">No service partners currently have approved status in the platform.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <%@ include file="common/footer.jsp" %>
+
+    <script>
+        function handleStatusUpdate(event, form, status) {
+            event.preventDefault();
+            const contact = form.querySelector('input[name="contact"]').value;
+            const row = form.closest('tr');
+
+            fetch('updateProviderStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'contact=' + encodeURIComponent(contact) + '&status=' + encodeURIComponent(status)
+            })
+            .then(response => {
+                if (response.ok) {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => row.remove(), 300);
+                } else {
+                    alert('Error updating provider status.');
+                }
+            })
+            .catch(() => alert('Network error occurred.'));
+        }
+    </script>
+</body>
+</html>
